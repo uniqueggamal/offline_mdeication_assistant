@@ -1,0 +1,26 @@
+import 'package:flutter_tts/flutter_tts.dart';
+
+class TtsService {
+  final FlutterTts _tts = FlutterTts();
+  bool _configured = false;
+
+  Future<void> configure() async {
+    if (_configured) return;
+    _configured = true;
+    await _tts.setLanguage('ne-NP').catchError((_) async {
+      // Fallback silently if Nepali voice isn't available.
+      await _tts.setLanguage('en-US');
+    });
+    await _tts.setSpeechRate(0.45);
+    await _tts.setPitch(1.0);
+  }
+
+  Future<void> speak(String text) async {
+    await configure();
+    await _tts.stop();
+    await _tts.speak(text);
+  }
+
+  Future<void> stop() => _tts.stop();
+}
+

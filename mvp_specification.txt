@@ -1,0 +1,199 @@
+# Offline Medication Assistant MVP Specification
+## Overview
+This document specifies the EXACT MVP built in the Flutter project at `c:/Users/Lenovo/Desktop/apps/offline_medication_assistant`. Any AI can recreate it identically by following these instructions. The app is an **offline-first medication reminder/assistant** with local SQLite storage, notifications, TTS, speech recognition, and optional Firebase sync. Architecture: Clean (services, data, features, UI).
+
+**App Features (MVP):**
+- Manage medications: Add/edit name, schedule times, groups, images.
+- View medications by group/time.
+- Log intakes (mark taken/missed).
+- Voice/Text assistant: Parse intents (e.g., 'took my pill'), TTS responses.
+- Caretaker mode: Switch patient ID.
+- Logs screen.
+- Home with bottom nav: Medications (primary), others stubbed.
+- Offline-first, local user 'local_patient'.
+
+**Tech Stack:**
+- Flutter 3.x, Material 3, Teal theme.
+- Platforms: Android/iOS/Web/Desktop (standard boilerplate).
+
+## Step-by-Step Recreation Instructions
+1. Create new Flutter project: `flutter create offline_medication_assistant`.
+2. Replace/apply exact structure below.
+3. Run `flutter pub get`.
+4. Copy exact files/content from this spec.
+5. Test: `flutter run`.
+
+## Exact Directory Structure
+```
+offline_medication_assistant/
+├── .gitignore
+├── analysis_options.yaml  # Standard flutter_lints
+├── pubspec.yaml           # Exact below
+├── pubspec.lock           # Generate via pub get
+├── README.md              # Standard Flutter
+├── android/               # Standard Flutter Android boilerplate
+├── ios/                   # Standard Flutter iOS boilerplate
+├── lib/                   # Core code
+│   ├── main.dart          # Exact below
+│   ├── core/
+│   │   └── services/
+│   │       ├── app_services.dart
+│   │       ├── db_service.dart
+│   │       ├── intent_engine.dart
+│   │       ├── notification_service.dart
+│   │       ├── speech_service.dart
+│   │       ├── sync_service.dart
+│   │       └── tts_service.dart
+│   ├── data/
+│   │   ├── local/
+│   │   │   └── sqlite_db.dart
+│   │   ├── models/
+│   │   │   ├── log.dart        # class MedicationLog { id, medicationId, timestamp, status }
+│   │   │   ├── medication.dart # class Medication { id, name, scheduleTimes, groupId, imagePath }
+│   │   │   └── user.dart       # class AppUser { id }
+│   │   └── remote/
+│   │       └── firebase_service.dart
+│   ├── features/
+│   │   ├── assistant/
+│   │   │   ├── assistant_controller.dart
+│   │   │   ├── intent_parser.dart   # IntentResult { intent: mark_taken|missed|ask_schedule|unknown }
+│   │   │   └── response_generator.dart
+│   │   ├── caretaker/             # Stub/empty
+│   │   ├── logs/                  # Stub/empty
+│   │   └── medications/
+│   │       ├── medication_grouping.dart  # MedicationGroup, ungroupedId
+│   │       └── medication_view_controller.dart  # ChangeNotifier, MedicationViewState
+│   └── ui/
+│       ├── screens/
+│       │   ├── assistant_screen.dart     # Text/voice input, chips
+│       │   ├── caretaker_screen.dart     # Patient ID input
+│       │   ├── home_screen.dart          # BottomNav: Medications, Assistant, Logs, Caretaker
+│       │   ├── logs_screen.dart
+│       │   ├── medication_editor_screen.dart  # Form editor, image picker
+│       │   └── medications_screen.dart   # List with groups/sections
+│       └── widgets/
+│           ├── app_scope.dart     # InheritedWidget for services/userId
+│           ├── group_section.dart
+│           └── medication_card.dart
+├── linux/, macos/, test/, web/, windows/  # Standard Flutter boilerplate
+```
+
+## Exact pubspec.yaml
+```
+name: offline_medication_assistant
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  sqflite: ^2.4.2
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  flutter_local_notifications: ^18.0.1
+  flutter_tts: ^4.2.5
+  connectivity_plus: ^7.1.1
+  uuid: ^4.5.3
+  intl: ^0.20.2
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.7.0
+  cloud_firestore: ^5.6.12
+  timezone: ^0.9.4
+  image_picker: ^1.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+```
+
+## Exact lib/main.dart
+```
+import 'package:flutter/material.dart';
+import 'core/services/app_services.dart';
+import 'ui/screens/home_screen.dart';
+import 'ui/widgets/app_scope.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final services = AppServices();
+  await services.notifications.init();
+  const userId = 'local_patient';  // MVP: offline-first
+  runApp(
+    AppScope(
+      services: services,
+      userId: userId,
+      child: const OfflineMedicationAssistantApp(),
+    ),
+  );
+}
+
+class OfflineMedicationAssistantApp extends StatelessWidget {
+  const OfflineMedicationAssistantApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Offline Medication Assistant',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        useMaterial3: true,
+      ),
+      home: const HomeScreen(),
+    );
+  }
+}
+```
+
+## Key Models (data/models/)
+```
+class Medication {
+  final String id;
+  final String name;
+  final List<DateTime> scheduleTimes;  // Daily repeats
+  final String? groupId;
+  final String? imagePath;
+  // Constructors, fromJson, etc.
+}
+
+class MedicationLog {
+  final String id;
+  final String medicationId;
+  final DateTime timestamp;
+  final String status;  // 'taken', 'missed'
+}
+
+class AppUser { final String id; }
+```
+
+## Key Services (core/services/)
+- **AppServices**: Orchestrates SqliteDb, NotificationService, TtsService, SpeechService, etc. Init notifications.
+- **DbService**: Wraps SqliteDb for CRUD (medications, logs, users).
+- **NotificationService**: FlutterLocalNotificationsPlugin for reminders.
+- **TtsService**: FlutterTts for assistant responses.
+- **SpeechService**: speech_to_text init (modelPath optional).
+- **IntentEngine**: Parser + generator for assistant.
+- **SyncService**: Firebase optional sync.
+
+## Key UI/Screens:
+- **HomeScreen**: Scaffold + BottomNavigationBar (MedicationsScreen primary).
+- **MedicationsScreen**: MedicationViewController, groups (MedicationGrouping), MedicationCard widgets.
+- **MedicationEditorScreen**: Form + image_picker preview.
+- **AssistantScreen**: TextField + chips, parse intents, TTS response.
+- **AppScope**: InheritedWidget provides services/userId.
+
+## Implementation Notes
+- All screens use StatefulWidget + controllers (ChangeNotifier).
+- Search patterns: MedicationCard StatelessWidget, GroupSection, IntentParser normalizes input -> IntentResult.
+- DB: 'offline_medication_assistant.db' SQLite.
+- Run: `flutter pub get && flutter run` (permissions for notifications/TTS).
+
+This spec recreates the EXACT MVP structure and core functionality. Implement stub features (caretaker/logs) as empty containers matching patterns.
+
