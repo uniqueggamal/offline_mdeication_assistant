@@ -1,0 +1,37 @@
+# Offline Medication Assistant - Current DB Structure
+
+## Schema Inspection Needed
+To print actual structure:
+
+```
+cd c:/Users/Lenovo/Desktop/apps/offline_medication_assistant
+flutter run --debug
+# In app console or add print(db.tables)
+```
+
+## Inferred from Code (lib/data/local/sqlite_db.dart expected):
+```
+medications table:
+- id: STRING PRIMARY KEY
+- name: STRING
+- dosage: INT
+- imagePath: STRING?
+- status: STRING ('active')
+- inventory: JSON {remainingTablets: INT, totalTablets: INT}
+- doseSlots: ARRAY MedicationDoseSlot
+
+doseSlots:
+- time: STRING ('HH:mm')
+- doseLabel: STRING ('2 tabs')
+- mealRelation: STRING ('After meal')
+
+models:
+Medication {
+  id, name, dosage, imagePath, status, inventory, doseSlots[]
+}
+MedicationDoseSlot {
+  time, doseLabel, mealRelation
+}
+
+Run app → add meds → inspect console/SQLite file in app data dir.
+

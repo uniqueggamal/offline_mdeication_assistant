@@ -4,6 +4,7 @@ import 'assistant_screen.dart';
 import 'caretaker_screen.dart';
 import 'logs_screen.dart';
 import 'medications_screen.dart';
+import 'dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
 
   static const _tabs = <Widget>[
-    MedicationsScreen(),
+    DashboardScreen(),
     AssistantScreen(),
     LogsScreen(),
     CaretakerScreen(),
@@ -40,10 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedIcon: Icon(Icons.chat_bubble),
             label: 'Assistant',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.history),
-            label: 'Logs',
-          ),
+          NavigationDestination(icon: Icon(Icons.history), label: 'Logs'),
           NavigationDestination(
             icon: Icon(Icons.people_alt_outlined),
             selectedIcon: Icon(Icons.people_alt),
@@ -54,4 +52,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

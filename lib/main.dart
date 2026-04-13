@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'core/services/app_services.dart';
-import 'ui/screens/home_screen.dart';
+import 'ui/theme/app_theme.dart';
+import 'ui/screens/dashboard_screen.dart';
 import 'ui/widgets/app_scope.dart';
 
 Future<void> main() async {
@@ -29,11 +30,8 @@ class OfflineMedicationAssistantApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Offline Medication Assistant',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-        useMaterial3: true,
-      ),
-      home: const HomeScreen(),
+      theme: AppTheme.lightTheme,
+      home: const DashboardScreen(),
     );
   }
 }

@@ -1,0 +1,52 @@
+# Offline Medication Assistant - Project Overview
+Flutter app for offline medication management with reminders, inventory tracking, grouping.
+
+## Architecture
+- **MVC**: Controllers (medication_view_controller.dart), Views (screens/*.dart), Models (data/models/*.dart), Services (core/services/*).
+- **Offline-first**: SQLite (lib/data/local/sqlite_db.dart via db_service.dart), optional Firebase sync.
+- **Theme**: Custom MedListColors (med_list_helpers.dart): orange/teal slate (`background 0xFFFFF7ED`, `primaryColor 0xFFEA580C`, `card white`, status/stock colors).
+
+## Key Files & Purposes
+
+### Models (lib/data/models/)
+- **medication.dart**: Core med data (id, name, dosage, doseSlots [time, doseLabel, mealRelation], inventory [total/remaining], status [active/hold/completed], groupId, imagePath, scheduleRaw).
+- **medication_dose_slot.dart**: Slot (time 'HH:MM', doseLabel, mealRelation 'before_meal/after_meal/none').
+- **log.dart**: Logs (id, medId, status 'taken/missed', timestamp, synced, scheduled_slot 'HH:MM').
+- **medication_editor_result.dart**: Editor output for upsert (name, dosage, dosePerDay, doseSlots, inventory, status, etc.).
+
+### Services (lib/core/services/)
+- **db_service.dart**: CRUD meds/logs, inventory decrement on taken, taken checks (today/slot), unsynced logs.
+- **notification_service.dart**: Schedule reminders per doseSlot, cancelAll.
+- **sqlite_db.dart**: Single DB instance, onCreate tables medications/logs (scheduled_slot), indexes.
+
+### Features (lib/features/medications/)
+- **med_list_helpers.dart**: MedListColors, grouping, stock status/days/colors, nextDoseLine, tabletsPerDayFromSlots.
+- **medication_view_controller.dart**: State (loading/mode/meds/takenIds), refresh, toggle today/all, markTaken (log+inventory), upsertFromEditor (merge scheduleRaw), delete/reschedule.
+- **dose_event.dart**: DoseEvent (med, scheduledTime, dose, isTaken) for today list.
+- **medication_grouping.dart**: Group by groupId (ungrouped '').
+
+### UI Screens (lib/ui/screens/)
+- **medications_screen.dart**: Home for meds list. AppBar (title 'Medications', toggle today/all, refresh/add). Body: CardMedList or GroupedMedList based on mode. Controller handles state.
+- **medication_editor_screen.dart**: Edit/new med form. Matched theme: background, AppBar primary/white, section Material cards elev1 r14 p12 w700, image 120 circle above name, status SegmentedButton MedListColors, 6AM even dose slots editable expansion (time picker/meal dropdown), inventory/stock colors/labels, group selector/chip/create. Save validates/upserts.
+- **home_screen.dart**: Tab navigator (Medications, Logs, Assistant, Caretaker).
+
+### UI Widgets (lib/ui/widgets/meds/)
+- **card_med_list.dart**: ListView CardMedList → InteractiveMedicationCard (swipe take/delete, gradient white/teal50 taken grey strike-thru checkbox/loading chevron).
+- **interactive_medication_card.dart**: Dismissible card swipe right take (green check, false dismiss animate state), left delete (red dialog), tap open, checkbox tap take.
+- **today_dose_list.dart**: ListView dose events (time/date, med/dose/meal, take/missed/taken button).
+
+### Other
+- **app_scope.dart**: InheritedWidget for services/userId.
+- **medication_group_selector.dart**: Chip picker/create groups.
+- **main.dart**: AppServices init notifications, MaterialApp M3 teal seed, HomeScreen.
+
+## Flow
+1. MedicationsScreen → Controller refresh → DB listMeds → CardMedList → InteractiveMedicationCard swipe/tap.
+2. Add/Edit → MedicationEditorScreen (form slots inventory group) → upsertMedicationFromEditor → controller rescheduleAll notifications.
+3. Mark taken → log DB, decrement inventory, UI state update.
+4. Logs → listLogs unsynced for sync.
+
+DB upgrade: ensureLogsSchema ALTER ADD scheduled_slot (existing upgraded).
+
+App ready, offline reminders, clean lints.
+

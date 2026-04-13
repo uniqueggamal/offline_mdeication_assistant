@@ -3,18 +3,18 @@ import '../../data/models/medication.dart';
 import '../../features/medications/med_list_helpers.dart';
 import '../../features/medications/medication_view_controller.dart';
 import '../widgets/app_scope.dart';
-import '../widgets/meds/overflow_safe_card.dart'; // Your new card
-import '../theme/app_theme.dart'; // The new theme
+import '../widgets/meds/overflow_safe_card.dart';
+import '../theme/app_theme.dart';
 import 'medication_editor_screen.dart';
 
-class MedicationsScreen extends StatefulWidget {
-  const MedicationsScreen({super.key});
+class AllMedicationsScreen extends StatefulWidget {
+  const AllMedicationsScreen({super.key});
 
   @override
-  State<MedicationsScreen> createState() => _MedicationsScreenState();
+  State<AllMedicationsScreen> createState() => _AllMedicationsScreenState();
 }
 
-class _MedicationsScreenState extends State<MedicationsScreen> {
+class _AllMedicationsScreenState extends State<AllMedicationsScreen> {
   MedicationViewController? _controller;
 
   @override
@@ -29,7 +29,6 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
   }
 
   Future<void> _openEditor({Medication? existing}) async {
-    // ... (Keep your existing editor logic)
     final outcome = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -54,10 +53,8 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      // We use a custom body instead of AppBar to match the screenshot header style
       body: CustomScrollView(
         slivers: [
-          // --- SLIVER 1: THE DASHBOARD HEADER ---
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -67,9 +64,8 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Greeting
                   const Text(
-                    "How you feeling\ntoday?",
+                    "All Medications",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -78,8 +74,6 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // Search Bar
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -105,20 +99,17 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                     ),
                   ),
                   const SizedBox(height: 30),
-
-                  // Section Title
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        "Today's Medicine",
+                        "Your Medications",
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.text,
                         ),
                       ),
-                      // Add Button styled as an icon
                       GestureDetector(
                         onTap: () => _openEditor(),
                         child: Container(
@@ -136,8 +127,6 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
               ),
             ),
           ),
-
-          // --- SLIVER 2: THE LIST ---
           AnimatedBuilder(
             animation: controller,
             builder: (context, child) {
@@ -174,23 +163,26 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
               return SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final med = meds[index];
-                  // Calculate time string
-                  final nextDose = med.doseSlots.isNotEmpty
-                      ? med.doseSlots.first.time
-                      : "00:00";
-
-                  return OverflowSafeCard(
-                    name: med.name,
-                    dosage: med.dosage,
-                    time: nextDose,
-                    mealRelation: med.doseSlots.isNotEmpty
-                        ? med.doseSlots.first.mealRelation
-                        : null,
-                    currentStock: med.inventory.remainingTablets,
-                    totalStock: med.inventory.totalTablets,
-                    isTaken: state.takenMedIdsToday.contains(med.id),
-                    onTap: () => _openEditor(existing: med),
-                    onTake: () => _markTaken(med),
+                  final time = nextDoseLine(med);
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: OverflowSafeCard(
+                      name: med.name,
+                      dosage: med.dosage,
+                      time: time,
+                      mealRelation: med.doseSlots.isNotEmpty
+                          ? med.doseSlots.first.mealRelation
+                          : null,
+                      currentStock: med.inventory.remainingTablets,
+                      totalStock: med.inventory.totalTablets,
+                      isTaken: state.takenMedIdsToday.contains(med.id),
+                      imagePath: med.imagePath,
+                      onTap: () => _openEditor(existing: med),
+                      onTake: () => _markTaken(med),
+                    ),
                   );
                 }, childCount: meds.length),
               );
